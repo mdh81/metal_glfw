@@ -20,6 +20,7 @@ private:
     unsigned short width, height;
     MTL::Device* device;
     MTL::CommandQueue* commandQueue;
+    MTL::RenderPipelineState* renderPipelineState;
     GLFWwindow* glfwWindow;
     CA::MetalLayer* metalLayer;
 };

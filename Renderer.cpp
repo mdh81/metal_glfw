@@ -1,28 +1,29 @@
 #include "Renderer.h"
-#include <print>
-
-#include <Metal/MTLCommandBuffer.hpp>
-#include <Metal/MTLRenderCommandEncoder.hpp>
-#include <Metal/MTLRenderPass.hpp>
-#include <QuartzCore/CAMetalDrawable.hpp>
-#include <QuartzCore/CAMetalLayer.hpp>
-#include "GLFW/glfw3.h"
+#include "Metal/MTLRenderPass.hpp"
+#include "Metal/MTLCommandBuffer.hpp"
+#include "Metal/MTLRenderCommandEncoder.hpp"
+#include "QuartzCore/CAMetalDrawable.hpp"
+#include "QuartzCore/CAMetalLayer.hpp"
 #include "QuartzCore/QuartzCore.h"
+#include "GLFW/glfw3.h"
+
+#include <print>
+#include <array>
 
 namespace {
-    void glfwErrorCallback(int error, const char* description)
-    {
-        fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+    void glfwErrorCallback(int const error, char const* description) {
+        std::println(stderr, "GLFW Error {}: {}", error, description);
     }
-
     auto constexpr WindowTitle {"Metal Renderer"};
+    std::array constexpr BackgroundColor {0.3f, 0.3f, 0.3f, 1.f};
 }
 
-Renderer::Renderer(unsigned short width, unsigned short height, void* metalLayer)
+Renderer::Renderer(unsigned short const width, unsigned short const height, void* metalLayer)
     : width(width)
     , height(height)
     , device(nullptr)
     , commandQueue(nullptr)
+    , renderPipelineState(nullptr)
     , glfwWindow(nullptr)
     , metalLayer(static_cast<CA::MetalLayer*>(metalLayer)) {
 }
@@ -66,8 +67,6 @@ void Renderer::run() const {
     auto const renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
     auto const colorAttachment = renderPassDescriptor->colorAttachments()->object(0);
 
-    float constexpr backgroundColor[4] = {.45f, .55f, .6f, 1.f};
-
     while (!glfwWindowShouldClose(glfwWindow)) {
         glfwPollEvents();
 
@@ -77,21 +76,21 @@ void Renderer::run() const {
 
         auto const drawable = metalLayer->nextDrawable();
 
-        MTL::CommandBuffer* commandBuffer = commandQueue->commandBuffer();
+        auto const commandBuffer = commandQueue->commandBuffer();
 
         colorAttachment->setClearColor(
             MTL::ClearColor(
-                backgroundColor[0],backgroundColor[1], backgroundColor[2],backgroundColor[3]));
+                BackgroundColor[0],BackgroundColor[1], BackgroundColor[2],BackgroundColor[3]));
         colorAttachment->setTexture(drawable->texture());
         colorAttachment->setLoadAction(MTL::LoadActionClear);
         colorAttachment->setStoreAction(MTL::StoreActionStore);
 
-        MTL::RenderCommandEncoder* renderEncoder = commandBuffer->renderCommandEncoder(renderPassDescriptor);
+        auto const renderEncoder = commandBuffer->renderCommandEncoder(renderPassDescriptor);
         renderEncoder->endEncoding();
 
         commandBuffer->presentDrawable(drawable);
         commandBuffer->commit();
-}
+    }
     glfwDestroyWindow(glfwWindow);
     glfwTerminate();
     renderPassDescriptor->release();
