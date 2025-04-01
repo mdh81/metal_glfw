@@ -9,7 +9,7 @@ set(CMAKE_OBJCXX_STANDARD 23)
 
 execute_process(
     COMMAND
-    ./setupMetalCpp.sh ${CMAKE_BINARY_DIR}
+    ${CMAKE_SOURCE_DIR}/setupMetalCpp.sh ${CMAKE_BINARY_DIR}
 )
 
 include(FetchContent)
