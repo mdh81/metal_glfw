@@ -13,12 +13,14 @@
 
 @implementation MetalAppDelegate
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
-    CAMetalLayer *metalLayer = [CAMetalLayer layer];
-    Renderer renderer{1024, 768, metalLayer};
-    NSWindow *nsWindow = glfwGetCocoaWindow(renderer.initialize());
-    nsWindow.contentView.layer = metalLayer;
-    nsWindow.contentView.wantsLayer = YES;
-    renderer.run();
+    @autoreleasepool {
+        CAMetalLayer *metalLayer = [CAMetalLayer layer];
+        Renderer renderer{1024, 768, metalLayer};
+        NSWindow *nsWindow = glfwGetCocoaWindow(renderer.initialize());
+        nsWindow.contentView.layer = metalLayer;
+        nsWindow.contentView.wantsLayer = YES;
+        renderer.run();
+    }
     [NSApp terminate:nil];
 }
 @end
