@@ -20,9 +20,19 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glfw)
 
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY git@github.com:nothings/stb.git
+    GIT_TAG f0569113c93ad095470c54bf34a17b36646bbbb5
+)
+FetchContent_MakeAvailable(stb)
+
 add_executable(${app} MetalSetup.cpp Renderer.cpp ShaderLoader.cpp main.mm)
 
-include_directories(${CMAKE_BINARY_DIR}/_deps/metal-cpp)
+include_directories(
+    ${CMAKE_BINARY_DIR}/_deps/metal-cpp
+    ${CMAKE_BINARY_DIR}/_deps/stb-src
+)
 
 file(GLOB shaderSources "*.metal" ShaderTypes.h)
 add_custom_target(

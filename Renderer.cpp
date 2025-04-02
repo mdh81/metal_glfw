@@ -1,3 +1,7 @@
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image.h"
+#include "stb_image_write.h"
+
 #include "Renderer.h"
 #include "ShaderLoader.h"
 #include "ShaderTypes.h"
@@ -35,6 +39,8 @@ namespace {
     std::array constexpr ClearColor {0.3f, 0.3f, 0.3f, 1.f};
 
     uint8_t constexpr NumberOfInstances {1};
+
+    bool TakeScreenShot {false};
 
 }
 
@@ -145,10 +151,18 @@ void Renderer::run() {
 
     auto const numIndices = prepareData();
 
+    glfwSetKeyCallback(glfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+            TakeScreenShot = true;
+        }
+    });
+
     auto const renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
     auto const colorAttachment = renderPassDescriptor->colorAttachments()->object(0);
 
     while (!glfwWindowShouldClose(glfwWindow)) {
+        NS::AutoreleasePool* autoReleasePool = NS::AutoreleasePool::alloc()->init();
+
         glfwPollEvents();
 
         int width, height;
@@ -165,7 +179,8 @@ void Renderer::run() {
         colorAttachment->setClearColor(
             MTL::ClearColor(
                 ClearColor[0],ClearColor[1], ClearColor[2],ClearColor[3]));
-        colorAttachment->setTexture(drawable->texture());
+        auto const texture = drawable->texture();
+        colorAttachment->setTexture(texture);
         colorAttachment->setLoadAction(MTL::LoadActionClear);
         colorAttachment->setStoreAction(MTL::StoreActionStore);
 
@@ -179,6 +194,22 @@ void Renderer::run() {
 
         commandBuffer->presentDrawable(drawable);
         commandBuffer->commit();
+
+        if (TakeScreenShot) {
+            std::println("Taking screenshot...");
+            commandBuffer->waitUntilCompleted();
+            std::vector<char> rendereredContent;
+            rendereredContent.resize(texture->width() * texture->height() * 4);
+            MTL::Region region {0, 0, texture->width(), texture->height() };
+            texture->getBytes(rendereredContent.data(), texture->width() * 4, rendereredContent.size(), region, 0, 0);
+            for (auto i = 0; i < rendereredContent.size(); i+=4) {
+                std::swap(rendereredContent[i+2], rendereredContent[i]);
+            }
+            stbi_write_png("image.png", static_cast<int>(texture->width()),
+                static_cast<int>(texture->height()), 4, rendereredContent.data(), 0);
+            TakeScreenShot = false;
+        }
+        autoReleasePool->release();
     }
     glfwDestroyWindow(glfwWindow);
     glfwTerminate();
