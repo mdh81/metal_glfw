@@ -20,9 +20,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glfw)
 
-add_executable(${app} MetalSetup.cpp Renderer.cpp main.mm)
+add_executable(${app} MetalSetup.cpp Renderer.cpp ShaderLoader.cpp main.mm)
 
 include_directories(${CMAKE_BINARY_DIR}/_deps/metal-cpp)
+
+file(GLOB shaderSources "*.metal" ShaderTypes.h)
+add_custom_target(
+    shaderCopy ALL
+    ${CMAKE_COMMAND} -E copy ${shaderSources} ${CMAKE_CURRENT_BINARY_DIR}/
+)
+add_dependencies(${app} shaderCopy)
 
 target_link_libraries(
     ${app}
